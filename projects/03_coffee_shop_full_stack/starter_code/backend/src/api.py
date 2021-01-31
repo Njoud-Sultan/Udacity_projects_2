@@ -16,7 +16,7 @@ CORS(app)
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 ## ROUTES
 '''
@@ -29,6 +29,17 @@ CORS(app)
 '''
 
 
+@app.route('/drinks', methods=['GET'])
+def get_drinks():
+    # query all existing drinks
+    drinks = Drink.query.all()
+    # return results with the success code
+    return jsonify({
+        'success': True,
+        'drinks': [drink.short() for drink in drinks]
+    }), 200
+
+
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -37,6 +48,18 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route('/drinks-detail', methods=['GET'])
+@requires_auth('get:drinks-detail')
+def get_drink_detail(jwt):
+    # query all existing drinks
+    drinks = Drink.query.all()
+    # return detailed drinks results with the success code
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long() for drink in drinks]
+    }), 200
 
 
 '''
@@ -48,6 +71,26 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def post_drink(jwt):
+    data = request.get_json()
+    print('got data:')
+    print(data)
+    # check that a title and a recipe is included in the request
+    if 'title' and 'recipe' not in data:
+        abort(400)
+
+    # insert to db the newly created drink from the request
+    drink = Drink(title=data['title'], recipe=json.dumps(data['recipe']))
+    drink.insert()
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long()]
+    })
 
 
 '''
@@ -63,6 +106,32 @@ CORS(app)
 '''
 
 
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def update_drink(jwt, id):
+    # query drink with id passed & check if exist
+    drink = Drink.query.get(id)
+    if drink is None:
+        abort(404)
+
+    data = request.get_json()
+    if 'title' in data:
+        drink.title = data['title']
+
+    if 'recipe' in data:
+        drink.recipe = json.dumps(data['recipe'])
+
+    try:
+        drink.update()
+    except BaseException:
+        abort(400)
+
+    return jsonify({
+        'success': True,
+        'drinks': [drink.long()]
+    })
+
+
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
@@ -75,17 +144,34 @@ CORS(app)
 '''
 
 
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drink(payload, id):
+    # query drink with id passed & check if exist
+    drink = Drink.query.filter(Drink.id == id).one_or_none()
+    if not drink:
+        abort(404)
+    try:
+        drink.delete()
+    except BaseException:
+        abort(400)
+
+    return jsonify({'success': True, 'delete': id}), 200
+
 ## Error Handling
 '''
 Example error handling for unprocessable entity
 '''
+
+
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-                    "success": False, 
-                    "error": 422,
-                    "message": "unprocessable"
-                    }), 422
+        "success": False,
+        "error": 422,
+        "message": "unprocessable"
+    }), 422
+
 
 '''
 @TODO implement error handlers using the @app.errorhandler(error) decorator
@@ -104,7 +190,43 @@ def unprocessable(error):
 '''
 
 
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        "success": False,
+        "error": 404,
+        "message": "Resource Not Found"
+    }), 404
+
+
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above 
 '''
+
+
+@app.errorhandler(AuthError)
+def auth_error(error):
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error['description']
+    }), error.status_code
+
+
+@app.errorhandler(401)
+def unauthorized(error):
+    return jsonify({
+        "success": False,
+        "error": 401,
+        "message": 'Unathorized'
+    }), 401
+
+
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        "success": False,
+        "error": 400,
+        "message": 'Bad Request'
+    }), 400
