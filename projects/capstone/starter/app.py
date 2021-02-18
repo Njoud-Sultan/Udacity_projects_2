@@ -3,6 +3,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from psycopg2.sql import NULL
+from datetime import datetime, date
 
 from database.models import db_drop_and_create_all, setup_db, Movie, Actor
 from auth.auth import AuthError, requires_auth
@@ -50,7 +51,7 @@ def get_movies():
 
 
 @APP.route('/actors/<int:id>', methods=['DELETE'])
-# @requires_auth('delete:actors')
+@requires_auth('delete:actors')
 def delete_actor(payload, id):
     # code
     actor = Actor.query.filter(Actor.id == id).one_or_none()
@@ -65,7 +66,7 @@ def delete_actor(payload, id):
 
 
 @APP.route('/movies/<int:id>', methods=['DELETE'])
-# @requires_auth('delete:movies')
+@requires_auth('delete:movies')
 def delete_movie(payload, id):
     # code
     movie = Movie.query.filter(Movie.id == id).one_or_none()
@@ -80,7 +81,7 @@ def delete_movie(payload, id):
 
 
 @APP.route('/actors', methods=['POST'])
-# @requires_auth('post:actors')
+@requires_auth('post:actors')
 def post_actor():
     data = request.get_json()
     # code
@@ -97,16 +98,18 @@ def post_actor():
 
 
 @APP.route('/movies', methods=['POST'])
-# @requires_auth('post:movies')
+@requires_auth('post:movies')
 def post_movie():
     data = request.get_json()
     # code
+    print("here_1")
     if 'title' not in data:
-        abort(400)
+        print("here_2")
+        abort(422)
+    print("here_3")
     # if 'release_date' not in data:
     #    release_date = NULL
-
-    movie = Movie(title=data['title'], release_date=data['release_date'])
+    movie = Movie(title=data['title'], release_date=datetime.strptime(data['release_date'], '%Y-%m-%d'))
     movie.insert()
 
     return jsonify({
@@ -116,7 +119,7 @@ def post_movie():
 
 
 @APP.route('/actors/<int:id>', methods=['PATCH'])
-# @requires_auth('patch:actor')
+@requires_auth('patch:actor')
 def modify_actor(id):
     actor = Actor.query.get(id)
     if actor is None:
@@ -144,7 +147,7 @@ def modify_actor(id):
 
 
 @APP.route('/movies/<int:id>', methods=['PATCH'])
-# @requires_auth('patch:movie')
+@requires_auth('patch:movie')
 def modify_movie(id):
     movie = Movie.query.get(id)
     if movie is None:
@@ -155,7 +158,7 @@ def modify_movie(id):
         movie.title = data['title']
 
     if 'release_date' in data:
-        movie.release_date = data['release_date']
+        movie.release_date = datetime.strptime(data['release_date'], '%Y-%m-%d')
 
     try:
         movie.update()
@@ -192,7 +195,7 @@ def not_found(error):
 error handler for AuthError
 '''
 
-
+'''
 @APP.errorhandler(AuthError)
 def auth_error(error):
     return jsonify({
@@ -200,7 +203,7 @@ def auth_error(error):
         "error": error.status_code,
         "message": error.error['description']
     }), error.status_code
-
+'''
 
 @APP.errorhandler(401)
 def unauthorized(error):
