@@ -6,8 +6,8 @@ from urllib.request import urlopen
 
 AUTH0_DOMAIN = 'fsnd-njoud.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'coffee'
-CLIENT_ID = 'kJJhFZnsIq87fuT9Zi9FGAmYFe75WEZK'
+API_AUDIENCE = 'agency'
+CLIENT_ID = '9Jx7oa5qtRl7DRmv6uxxu27dAPb1TBdx'
 
 ## AuthError Exception
 '''

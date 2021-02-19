@@ -25,6 +25,11 @@ if __name__ == '__main__':
 
 db_drop_and_create_all()
 
+@APP.route('/token')
+def get_token():
+    return jsonify({
+        'success': True
+    }), 200
 
 @APP.route('/actors', methods=['GET'])
 def get_actors():
@@ -51,7 +56,7 @@ def get_movies():
 
 
 @APP.route('/actors/<int:id>', methods=['DELETE'])
-@requires_auth('delete:actors')
+@requires_auth('delete:actor')
 def delete_actor(payload, id):
     # code
     actor = Actor.query.filter(Actor.id == id).one_or_none()
@@ -66,7 +71,7 @@ def delete_actor(payload, id):
 
 
 @APP.route('/movies/<int:id>', methods=['DELETE'])
-@requires_auth('delete:movies')
+@requires_auth('delete:movie')
 def delete_movie(payload, id):
     # code
     movie = Movie.query.filter(Movie.id == id).one_or_none()
@@ -81,8 +86,8 @@ def delete_movie(payload, id):
 
 
 @APP.route('/actors', methods=['POST'])
-@requires_auth('post:actors')
-def post_actor():
+@requires_auth('post:actor')
+def post_actor(payload):
     data = request.get_json()
     # code
     if 'name' and 'gender' and 'age' not in data:
@@ -98,15 +103,11 @@ def post_actor():
 
 
 @APP.route('/movies', methods=['POST'])
-@requires_auth('post:movies')
-def post_movie():
+@requires_auth('post:movie')
+def post_movie(payload):
     data = request.get_json()
-    # code
-    print("here_1")
-    if 'title' not in data:
-        print("here_2")
-        abort(422)
-    print("here_3")
+    if 'title' and 'release_date' not in data:
+        abort(400)
     # if 'release_date' not in data:
     #    release_date = NULL
     movie = Movie(title=data['title'], release_date=datetime.strptime(data['release_date'], '%Y-%m-%d'))
@@ -120,7 +121,7 @@ def post_movie():
 
 @APP.route('/actors/<int:id>', methods=['PATCH'])
 @requires_auth('patch:actor')
-def modify_actor(id):
+def modify_actor(payload, id):
     actor = Actor.query.get(id)
     if actor is None:
         abort(404)
@@ -148,7 +149,7 @@ def modify_actor(id):
 
 @APP.route('/movies/<int:id>', methods=['PATCH'])
 @requires_auth('patch:movie')
-def modify_movie(id):
+def modify_movie(payload, id):
     movie = Movie.query.get(id)
     if movie is None:
         abort(404)
