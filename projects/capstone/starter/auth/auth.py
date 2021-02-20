@@ -189,7 +189,6 @@ def requires_auth(permission=''):
                 abort(401)
             # check permissions to authorize the user for the associate function
             check_permissions(permission, payload)
-            print('checked permissions')
             return f(payload, *args, **kwargs)
 
         return wrapper
