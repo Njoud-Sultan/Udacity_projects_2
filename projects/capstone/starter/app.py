@@ -25,11 +25,13 @@ if __name__ == '__main__':
 
 db_drop_and_create_all()
 
+
 @APP.route('/token')
 def get_token():
     return jsonify({
         'success': True
     }), 200
+
 
 @APP.route('/actors', methods=['GET'])
 def get_actors():
@@ -196,7 +198,7 @@ def not_found(error):
 error handler for AuthError
 '''
 
-'''
+
 @APP.errorhandler(AuthError)
 def auth_error(error):
     return jsonify({
@@ -204,14 +206,14 @@ def auth_error(error):
         "error": error.status_code,
         "message": error.error['description']
     }), error.status_code
-'''
+
 
 @APP.errorhandler(401)
 def unauthorized(error):
     return jsonify({
         "success": False,
         "error": 401,
-        "message": 'Unathorized'
+        "message": 'Unauthorized'
     }), 401
 
 
