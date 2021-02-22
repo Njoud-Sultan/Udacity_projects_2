@@ -10,7 +10,7 @@ DELETE /actors/ and /movies/
 POST /actors and /movies and
 PATCH /actors/ and /movies/
 Roles:
-Casting Assistant
+the Public
 Can view actors and movies
 Casting Director
 All permissions a Casting Assistant has and…

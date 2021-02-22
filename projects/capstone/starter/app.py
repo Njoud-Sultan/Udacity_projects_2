@@ -81,33 +81,31 @@ def create_app(test_config=None):
     @requires_auth('post:actor')
     def post_actor(payload):
         data = request.get_json()
-        # code
-        if 'name' and 'gender' and 'age' not in data:
-            abort(400)
+        try:
+            actor = Actor(name=data['name'], gender=data['gender'], age=data['age'])
+            actor.insert()
 
-        actor = Actor(name=data['name'], gender=data['gender'], age=data['age'])
-        actor.insert()
-
-        return jsonify({
-            'success': True,
-            'actor': actor.format()
-        }), 200
+            return jsonify({
+                'success': True,
+                'actor': actor.format()
+            }), 200
+        except:
+            abort(422)
 
     @APP.route('/movies', methods=['POST'])
     @requires_auth('post:movie')
     def post_movie(payload):
         data = request.get_json()
-        if 'title' and 'release_date' not in data:
-            abort(400)
-        # if 'release_date' not in data:
-        #    release_date = NULL
-        movie = Movie(title=data['title'], release_date=datetime.strptime(data['release_date'], '%Y-%m-%d'))
-        movie.insert()
+        try:
+            movie = Movie(title=data['title'], release_date=datetime.strptime(data['release_date'], '%Y-%m-%d'))
+            movie.insert()
 
-        return jsonify({
-            'success': True,
-            'movie': movie.format()
-        }), 200
+            return jsonify({
+                'success': True,
+                'movie': movie.format()
+            }), 200
+        except:
+            abort(422)
 
     @APP.route('/actors/<int:id>', methods=['PATCH'])
     @requires_auth('patch:actor')
